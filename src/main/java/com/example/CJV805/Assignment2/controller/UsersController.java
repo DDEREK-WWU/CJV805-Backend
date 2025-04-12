@@ -1,4 +1,5 @@
 package com.example.CJV805.Assignment2.controller;
+
 import com.example.CJV805.Assignment2.model.Users;
 import com.example.CJV805.Assignment2.service.UsersService;
 import jakarta.validation.constraints.Email;
@@ -7,6 +8,7 @@ import jakarta.validation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -22,21 +24,30 @@ public class UsersController {
             Users createdUser = usersService.registerUsers(user);
             return ResponseEntity.status(201).body(createdUser);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser (@RequestBody @Valid LoginRequest loginRequest){
+    public ResponseEntity<?> loginUser(@RequestBody @Valid LoginRequest loginRequest) {
+        Users user = usersService.getUserByEmail(loginRequest.getEmail());
         boolean authenticated = usersService.authenticateUsers(loginRequest.getEmail(), loginRequest.getPassword());
         if (authenticated) {
-            return ResponseEntity.ok("Login successful");
+            return ResponseEntity.ok(user);
         } else {
             return ResponseEntity.status(401).body("Invalid email or password");
         }
     }
 
-
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable String id) {
+        try {
+            Users user = usersService.getUserById(id);
+            return ResponseEntity.ok(user);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     public static class LoginRequest {
 
@@ -62,6 +73,4 @@ public class UsersController {
         }
     }
 
-
-    
 }
